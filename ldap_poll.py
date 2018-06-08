@@ -11,6 +11,9 @@ def bindtoit():
     print("Unbinding!", conn.unbind())
 
 
+#TODO: implement authentication and logging
+
+
 if __name__ == "__main__":
     print("Running ldap_poll in standalone mode")
     bindtoit()
