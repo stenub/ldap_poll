@@ -1,21 +1,25 @@
 from datetime import datetime
 from ldap3 import Server, Connection, SIMPLE, ALL
-import threading, logging, sys, time
-
-#TODO: catch exceptions from threads
+import logging, sys, time, argparse
 
 
-### Change the following settings to your needs
 
-hostname = 'ipa.demo1.freeipa.org'
+def read_cmd_params():
+    parser = argparse.ArgumentParser(description="Possible options:")
+    parser.add_argument("-s", "--server", dest="hostname", required=True,
+                        help="hostname or ip address of the ldap-server")
+    parser.add_argument("-u", "--user_dn", dest="user_dn", required=True,
+                        help="user distinguished name, eg: 'uid=admin,cn=users,cn=accounts,dc=demo1,dc=freeipa,dc=org'")
+    parser.add_argument("-p", "--password", dest="password", required=True,
+                        help="the password for the given user")
+    parser.add_argument("-tf", "--trigger_frequency", dest="tf", required=True,
+                        help="the frequency for polling the ldap server")
+    if len(sys.argv) == 1:
+        parser.print_help()
+        sys.exit(1)
 
-user_dn = 'uid=admin,cn=users,cn=accounts,dc=demo1,dc=freeipa,dc=org'
-password = 'Secret123'
 
-tf = 2  #Trigger frequency in seconds
-
-
-### Don't change anything below this line
+    return parser.parse_args()
 
 
 
@@ -38,8 +42,6 @@ def setup_logger():
 
 
 def bind_to_it(host, user_dn, pw):
-    #threading.Timer(tf, bind_to_it(host, user, pw, tf)).start()
-
     server = Server(host, get_info=ALL)
     conn = Connection(server, user=user_dn, password=pw, authentication=SIMPLE, raise_exceptions=True)
 
@@ -55,13 +57,16 @@ def bind_to_it(host, user_dn, pw):
 
 if __name__ == "__main__":
 
+    param = read_cmd_params()
     logger = setup_logger()
 
     logger.info("Running ldap_poll in standalone mode")
 
+
     try:
         while True:
-            bind_to_it(hostname, user_dn, password)
-            time.sleep(tf)
+            bind_to_it(param.hostname, param.user_dn, param.password)
+            #bind_to_it(hostname, user_dn, password)
+            time.sleep(param.tf)
     except Exception as exception:
         logger.exception(exception)
