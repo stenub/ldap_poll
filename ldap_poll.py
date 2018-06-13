@@ -1,5 +1,5 @@
 from datetime import datetime
-from ldap3 import Server, Connection, SIMPLE, ALL
+from ldap3 import Server, Connection, SIMPLE, NTLM, ALL
 import logging, sys, time, argparse
 
 
@@ -8,6 +8,8 @@ def read_cmd_params():
     parser = argparse.ArgumentParser(description="Possible options:")
     parser.add_argument("-s", "--server", dest="hostname", required=True,
                         help="hostname or ip address of the ldap-server")
+    parser.add_argument("-a", "--auth", dest="auth_method", required=True, choices=["SIMPLE", "NTLM"],
+                        help="auth method to use")
     parser.add_argument("-u", "--user_dn", dest="user_dn", required=True,
                         help="user distinguished name, eg: 'uid=admin,cn=users,cn=accounts,dc=demo1,dc=freeipa,dc=org'")
     parser.add_argument("-p", "--password", dest="password", required=True,
@@ -41,9 +43,10 @@ def setup_logger():
     return logger
 
 
-def bind_to_it(host, user_dn, pw):
+
+def bind_to_it(host, user_dn, pw, auth_method):
     server = Server(host, get_info=ALL)
-    conn = Connection(server, user=user_dn, password=pw, authentication=SIMPLE, raise_exceptions=True)
+    conn = Connection(server, user=user_dn, password=pw, authentication=auth_method, raise_exceptions=True)
 
     logger.info("Trying to bind to ldap server")
     conn.bind()
